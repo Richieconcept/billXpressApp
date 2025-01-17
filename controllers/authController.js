@@ -13,29 +13,29 @@ const registerUser = async (req, res) => {
   try {
     const { name, username, email, phoneNumber, password, confirmPassword } = req.body;
 
-    // Check if all fields are provided
+    // Validate input
     if (!name || !username || !email || !phoneNumber || !password || !confirmPassword) {
       return res.status(400).json({ message: "All fields are required." });
     }
 
-    // Check if passwords match
     if (password !== confirmPassword) {
       return res.status(400).json({ message: "Passwords do not match." });
     }
 
-    // Check if email, username, or phone number is already taken
+    // Check for existing user
     const existingUser = await User.findOne({
       $or: [{ email }, { username }, { phoneNumber }],
     });
+
     if (existingUser) {
       return res.status(400).json({ message: "Email, username, or phone number already in use." });
     }
 
-    // Hash the password
+    // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Generate a numeric verification token
-    const verificationToken = generateVerificationToken();
+    // Generate a 6-digit verification token
+    const verificationToken = Math.floor(100000 + Math.random() * 900000).toString();
 
     // Create a new user
     const newUser = new User({
@@ -44,15 +44,14 @@ const registerUser = async (req, res) => {
       email,
       phoneNumber,
       password: hashedPassword,
-      verificationToken,  // Store the 6-digit verification token
+      verificationToken,
     });
 
-    // Save the user to the database
+    // Save user to the database
     await newUser.save();
 
-    // Send verification email with the token
-    const verificationLink = `http://localhost:5000/api/v1/auth/verify/${verificationToken}`;
-    await sendVerificationEmail(email, verificationLink);
+    // Send verification email
+    await sendVerificationEmail(email, verificationToken);
 
     res.status(201).json({ message: "User registered successfully! Check your email to verify your account." });
   } catch (error) {
