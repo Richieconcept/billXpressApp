@@ -33,6 +33,13 @@ const userSchema = new mongoose.Schema(
       type: String,
       default: "file:///C:/Users/Hi/Desktop/billExpressProject/billEpressApp/assets/prfileAvatar.png", // Replace with the URL of your default avatar
     },
+    verificationToken: {
+      type: String, // Stores the unique email verification token
+    },
+    isVerified: {
+      type: Boolean,
+      default: false, // Indicates whether the user's email is verified
+    },
   },
   {
     timestamps: true, // Adds createdAt and updatedAt fields

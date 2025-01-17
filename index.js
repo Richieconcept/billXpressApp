@@ -12,17 +12,26 @@ app.use(express.json()); // Middleware to parse JSON requests
 app.use(cors());
 
 
+
+app.use(cors({
+  origin: 'http://localhost:3000', // Your React app's local server
+  methods: 'GET,POST,PUT,DELETE',
+  credentials: true,
+}));
+
 // Use the authentication routes
-app.use("/api/v1", authRoutes); 
-
-
+app.use("/api/v1", authRoutes);
 
 // MongoDB connection
 mongoose
-  .connect(process.env.MONGODB_URI,)
+  .connect(process.env.MONGODB_URI)
   .then(() => console.log("Connected to MongoDB"))
   .catch((error) => console.error("MongoDB connection error:", error));
 
+// Simple route to confirm API is working
+app.get("/", (req, res) => {
+  res.send("API is working and the server is running!");
+});
 
 // Main server setup
 const PORT = process.env.PORT || 5000;
