@@ -22,14 +22,21 @@ const registerUser = async (req, res) => {
       return res.status(400).json({ message: "Passwords do not match." });
     }
 
-    // Check for existing user
-    const existingUser = await User.findOne({
-      $or: [{ email }, { username }, { phoneNumber }],
-    });
+    // Check for existing user and specify conflict
+const existingEmail = await User.findOne({ email });
+if (existingEmail) {
+  return res.status(400).json({ errors: { email: "Email is already in use." } });
+}
 
-    if (existingUser) {
-      return res.status(400).json({ message: "Email, username, or phone number already in use." });
-    }
+const existingUsername = await User.findOne({ username });
+if (existingUsername) {
+  return res.status(400).json({ errors: { username: "Username is already in use." } });
+}
+
+const existingPhoneNumber = await User.findOne({ phoneNumber });
+if (existingPhoneNumber) {
+  return res.status(400).json({ errors: { phoneNumber: "Phone number is already in use." } });
+}
 
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -60,56 +67,7 @@ const registerUser = async (req, res) => {
   }
 };
 
-// Verify Email
-const verifyEmail = async (req, res) => {
-  try {
-    const { token } = req.params;
-
-    // Find the user by the verification token
-    const user = await User.findOne({ verificationToken: token });
-    if (!user) {
-      return res.status(400).json({ message: "Invalid or expired verification token." });
-    }
-
-    // Mark the user as verified and clear the token
-    user.verificationToken = null;  // Clear the token after successful verification
-    await user.save();
-
-    res.status(200).json({ message: "Email verified successfully!" });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Server error." });
-  }
-};
-
-// Send Verification Email
-const sendVerificationEmail = async (email, link) => {
-  try {
-    const transporter = nodemailer.createTransport({
-      service: "gmail",
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-      },
-    });
-
-    const mailOptions = {
-      from: "no-reply@yourdomain.com",
-      to: email,
-      subject: "Verify your email",
-      html: `<p>Please verify your email by entering the following code:</p>
-             <p><strong>${link}</strong></p>
-             <p>If you did not register, please ignore this email.</p>`,
-    };
-
-    await transporter.sendMail(mailOptions);
-  } catch (error) {
-    console.error("Error sending email:", error);
-    throw new Error("Failed to send verification email.");
-  }
-};
 
 module.exports = {
-  registerUser,
-  verifyEmail,
+  registerUser
 };

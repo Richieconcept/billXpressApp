@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
-const { registerUser, verifyEmail } = require("../controllers/authController"); // Import controllers
+const { registerUser } = require("../controllers/authController"); // Import controllers
+const { verifyEmail } = require("../controllers/verifyEmailController")
 
 // Route for user registration
 router.post("/register", registerUser);
