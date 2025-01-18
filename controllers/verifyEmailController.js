@@ -31,11 +31,11 @@ const sendVerificationEmail = async (email, verificationToken) => {
 
 
 const verifyEmailToken = async (req, res) => {
-  const { email, verificationToken } = req.body; // Extract email and token from the request body
+  const {verificationToken } = req.body; // Extract token from the request body
 
   try {
     // Find the user with the matching email and token
-    const user = await User.findOne({ email, verificationToken });
+    const user = await User.findOne({ verificationToken });
 
     if (!user) {
       return res.status(400).json({ message: "Invalid token or email." });
