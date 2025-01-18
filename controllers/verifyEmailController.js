@@ -30,22 +30,20 @@ const sendVerificationEmail = async (email, verificationToken) => {
 
 
 
-
-// Verify email token
 const verifyEmailToken = async (req, res) => {
-  const { email, verificationToken } = req.body;
+  const { email, verificationToken } = req.body; // Extract email and token from the request body
 
   try {
-    // Check if the user exists and the token matches
+    // Find the user with the matching email and token
     const user = await User.findOne({ email, verificationToken });
 
     if (!user) {
       return res.status(400).json({ message: "Invalid token or email." });
     }
 
-    // If the token is valid, mark the user as verified
+    // Mark the user as verified and clear the token
     user.isVerified = true;
-    user.verificationToken = null; // Remove the token after successful verification
+    user.verificationToken = null; // Clear the token after successful verification
     await user.save();
 
     res.status(200).json({ message: "Email verified successfully." });

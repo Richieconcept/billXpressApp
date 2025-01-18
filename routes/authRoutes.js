@@ -9,7 +9,7 @@ const { loginUser } = require("../controllers/loginController");
 router.post("/register", registerUser);
 
 // Route for email verification using a token
-router.get("/verify/:token", verifyEmailToken); // Verify user email with the token
+router.post("/verify", verifyEmailToken);
 
 // Route for User login
 router.post("/login", loginUser);
