@@ -9,14 +9,12 @@ dotenv.config(); // Load environment variables
 
 const app = express();
 app.use(express.json()); // Middleware to parse JSON requests
-app.use(cors());
 
-
-
+// CORS middleware
 app.use(cors({
-  origin: 'http://localhost:3000', // Your React app's local server
+  origin: 'http://localhost:3000', // React app's local server
   methods: 'GET,POST,PUT,DELETE',
-  credentials: true,
+  credentials: true, // Allow cookies to be sent with requests
 }));
 
 // Use the authentication routes
