@@ -1,7 +1,6 @@
 const bcrypt = require("bcrypt");
-const crypto = require("crypto");
 const User = require("../models/user");
-const nodemailer = require("nodemailer");
+const { sendVerificationEmail } = require("./verifyEmailController");
 
 // Generate a 6-digit numeric verification token
 const generateVerificationToken = () => {
@@ -22,29 +21,32 @@ const registerUser = async (req, res) => {
       return res.status(400).json({ message: "Passwords do not match." });
     }
 
-    // Check for existing user and specify conflict
-const existingEmail = await User.findOne({ email });
-if (existingEmail) {
-  return res.status(400).json({ errors: { email: "Email is already in use." } });
-}
+    // Check for existing user conflicts
+    let errors = {};
 
-const existingUsername = await User.findOne({ username });
-if (existingUsername) {
-  return res.status(400).json({ errors: { username: "Username is already in use." } });
-}
+    if (await User.findOne({ email })) {
+      errors.email = "Email is already in use.";
+    }
 
-const existingPhoneNumber = await User.findOne({ phoneNumber });
-if (existingPhoneNumber) {
-  return res.status(400).json({ errors: { phoneNumber: "Phone number is already in use." } });
-}
+    if (await User.findOne({ username })) {
+      errors.username = "Username is already in use.";
+    }
+
+    if (await User.findOne({ phoneNumber })) {
+      errors.phoneNumber = "Phone number is already in use.";
+    }
+
+    if (Object.keys(errors).length > 0) {
+      return res.status(400).json({ errors });
+    }
 
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Generate a 6-digit verification token
-    const verificationToken = Math.floor(100000 + Math.random() * 900000).toString();
+    // Generate verification token
+    const verificationToken = generateVerificationToken();
 
-    // Create a new user
+    // Create new user
     const newUser = new User({
       name,
       username,
@@ -60,14 +62,15 @@ if (existingPhoneNumber) {
     // Send verification email
     await sendVerificationEmail(email, verificationToken);
 
-    res.status(201).json({ message: "User registered successfully! Check your email to verify your account." });
+    res.status(201).json({
+      message: "User registered successfully! Check your email to verify your account.",
+    });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Server error." });
   }
 };
 
-
 module.exports = {
-  registerUser
+  registerUser,
 };
