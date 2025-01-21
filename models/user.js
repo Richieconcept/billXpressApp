@@ -31,7 +31,8 @@ const userSchema = new mongoose.Schema(
     },
     avatar: {
       type: String,
-      default: "file:///C:/Users/Hi/Desktop/billExpressProject/billEpressApp/assets/prfileAvatar.png", // Replace with the URL of your default avatar
+      default:
+        "file:///C:/Users/Hi/Desktop/billExpressProject/billEpressApp/assets/prfileAvatar.png", // Replace with the URL of your default avatar
     },
     verificationToken: {
       type: String, // Stores the unique email verification token
@@ -39,6 +40,13 @@ const userSchema = new mongoose.Schema(
     isVerified: {
       type: Boolean,
       default: false, // Indicates whether the user's email is verified
+    },
+    // Add these fields for password reset
+    passwordResetToken: {
+      type: String, // Stores the reset token
+    },
+    passwordResetExpires: {
+      type: Date, // Stores the expiry date and time for the token
     },
   },
   {

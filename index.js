@@ -4,6 +4,11 @@ const mongoose = require("mongoose");
 const dotenv = require("dotenv");
 const authRoutes = require("./routes/authRoutes"); // Import auth routes
 const cors = require('cors');
+const errorHandler = require("./routes/passwordRoutes");
+const passwordRoutes = require("./routes/passwordRoutes");
+
+
+
 
 dotenv.config(); // Load environment variables
 
@@ -17,7 +22,11 @@ app.use(cors({
 }));
 
 // Use the authentication routes
-app.use("/api/v1", authRoutes);
+app.use("/api/v1/auth", authRoutes);
+app.use("/api/password", passwordRoutes); 
+
+
+app.use(errorHandler);
 
 // MongoDB connection
 mongoose
