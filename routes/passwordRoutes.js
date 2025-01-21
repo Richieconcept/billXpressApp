@@ -1,18 +1,17 @@
 const express = require("express");
+const { handleResetPasswordLink, resetPassword } = require("../controllers/resetPassCont");
+const { handleForgotPasswordRequest } = require("../controllers/handleForgottenPass");
+
+
 const router = express.Router();
-const {requestPasswordReset} = require("../controllers/requestPassResetCont")
-const {verifyResetToken} = require("../controllers/verifyResetPassCont")
-const {resetPassword} = require("../controllers/resetPassCont")
-const validateRegistrationInput = require("../middlewares/validateInput");
 
+// Route for forgotten password
+router.post("/forgot-password", handleForgotPasswordRequest);
 
-// Request reset token
-router.post("/forgot-password", requestPasswordReset);
+// Route to handle the reset password link
+router.get("/reset-password/:token", handleResetPasswordLink);
 
-// Verify reset token
-router.post("/verify-reset-token", verifyResetToken);
-
-// Reset password
+// Route to reset the password
 router.post("/reset-password", resetPassword);
 
 module.exports = router;

@@ -22,8 +22,8 @@ app.use(cors({
 }));
 
 // Use the authentication routes
-app.use("/api/v1/auth", authRoutes);
-app.use("/api/password", passwordRoutes); 
+app.use("/api/v1/auth", authRoutes,  passwordRoutes);
+// app.use("/api/password", passwordRoutes); 
 
 
 app.use(errorHandler);

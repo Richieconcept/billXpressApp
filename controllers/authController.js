@@ -13,15 +13,15 @@ const registerUser = async (req, res) => {
     // ... (input validation)
 
    // Check for existing user
-   if (await User.findOne({ email })) {
-    return res.status(400).json({ message: "Email is already in use." });
-  }
-  if (await User.findOne({ username })) {
-    return res.status(400).json({ message: "Username is already in use." });
-  }
-  if (await User.findOne({ phoneNumber })) {
-    return res.status(400).json({ message: "Phone number is already in use." });
-  }
+    if (await User.findOne({ email })) {
+      return res.status(400).json({ message: "Email is already in use." });
+    }
+    if (await User.findOne({ username })) {
+      return res.status(400).json({ message: "Username is already in use." });
+    }
+    if (await User.findOne({ phoneNumber })) {
+      return res.status(400).json({ message: "Phone number is already in use." });
+    }
 
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
