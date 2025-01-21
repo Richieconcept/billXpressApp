@@ -1,51 +1,43 @@
-const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-const User = require("../models/user");
+const bcrypt = require("bcrypt");
+const User = require("../models/user"); 
 
-const loginUser = async (req, res) => {
+// Login user
+exports.loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // Validate input
-    if (!email || !password) {
-      return res.status(400).json({ message: "Email and password are required." });
-    }
-
-    // Find user by email (or username if you prefer)
+    // Check if the email exists in the database
     const user = await User.findOne({ email });
     if (!user) {
-      return res.status(400).json({ message: "Invalid credentials." });
+      return res.status(404).json({ message: "User not found" });
     }
 
-    // Check if the password is correct
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) {
-      return res.status(400).json({ message: "Invalid credentials." });
+    // Validate the password
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    if (!isPasswordValid) {
+      return res.status(401).json({ message: "Invalid email or password" });
     }
 
-    // Check if the user is verified
-    if (!user.isVerified) {
-      return res.status(400).json({ message: "Please verify your email before logging in." });
-    }
-
-    // Generate JWT token (use a secret key from environment variables)
+    // Generate a JWT token
     const token = jwt.sign(
-      { userId: user._id, email: user.email },
-      process.env.JWT_SECRET_KEY, // Secret key from .env
-      { expiresIn: "1h" } // Expire in 1 hour
+      { id: user._id, email: user.email },
+      process.env.JWT_SECRET,
+      { expiresIn: "1h" } // Token expires in 1 hour
     );
 
-    // Send token to the client
-    res.status(200).json({
-      message: "Login successful.",
-      token, // You can include user data in the response if needed
+    // Return success response
+    return res.status(200).json({
+      message: "Login successful",
+      token,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+      },
     });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Server error." });
+    console.error("Error during login:", error);
+    return res.status(500).json({ message: "An error occurred during login" });
   }
-};
-
-module.exports = {
-  loginUser,
 };
