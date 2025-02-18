@@ -5,10 +5,10 @@ const User = require("../models/user");
 // Login user
 exports.loginUser = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { username, password } = req.body;
 
-    // Check if the email exists in the database
-    const user = await User.findOne({ email });
+    // Check if the username exists in the database
+    const user = await User.findOne({ username });
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
@@ -16,12 +16,12 @@ exports.loginUser = async (req, res) => {
     // Validate the password
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
-      return res.status(401).json({ message: "Invalid email or password" });
+      return res.status(401).json({ message: "Invalid username or password" });
     }
 
     // Generate a JWT token
     const token = jwt.sign(
-      { id: user._id, email: user.email },
+      { id: user._id, username: user.username },
       process.env.JWT_SECRET_KEY,
       { expiresIn: "1h" } // Token expires in 1 hour
     );
@@ -33,7 +33,7 @@ exports.loginUser = async (req, res) => {
       user: {
         id: user._id,
         name: user.name,
-        email: user.email,
+        username: user.username,
       },
     });
   } catch (error) {
