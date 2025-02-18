@@ -20,7 +20,7 @@ app.use(express.json()); // Middleware to parse JSON requests
 
 // CORS middleware
 app.use(cors({
-  origin: 'https://bill-express-app.vercel.app/', // React app's local server
+  origin: 'https://bill-express-app.vercel.app', // React app's local server
   methods: 'GET,POST,PUT,DELETE',
 }));
 
