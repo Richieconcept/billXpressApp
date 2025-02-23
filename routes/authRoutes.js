@@ -5,6 +5,8 @@ const { loginUser } = require("../controllers/loginController");
 const validateRegistrationInput = require("../middlewares/validateInput");
 const { verifyEmail } = require("../controllers/verifyEmailController");
 const authenticate = require("../middlewares/authenticate");
+const { resendVerificationToken } = require("../controllers/resendTokenController");
+
 
 
 
@@ -16,5 +18,8 @@ router.post("/verify-email", verifyEmail);
 
 // Route for User login
 router.post("/login", loginUser);
+
+// Resend Verification Token Route
+router.post("/resend-token", resendVerificationToken);
 
 module.exports = router;
