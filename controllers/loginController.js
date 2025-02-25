@@ -1,6 +1,6 @@
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
-const User = require("../models/user"); 
+const User = require("../models/user");
 
 // Login user
 exports.loginUser = async (req, res) => {
@@ -11,6 +11,13 @@ exports.loginUser = async (req, res) => {
     const user = await User.findOne({ username });
     if (!user) {
       return res.status(404).json({ message: "User not found" });
+    }
+
+    // Check if the user's account is verified
+    if (!user.isVerified) {
+      return res.status(403).json({ 
+        message: "Account not verified. Please check your email to verify your account." 
+      });
     }
 
     // Validate the password
