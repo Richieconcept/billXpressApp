@@ -7,6 +7,8 @@ const cors = require('cors');
 const errorHandler = require("./routes/passwordRoutes");
 const passwordRoutes = require("./routes/passwordRoutes");
 const protectedRoute = require("./routes/protectedRoute");
+const userRoutes = require("./routes/userRoutes"); // Import user routes
+
 
 
 
@@ -26,6 +28,8 @@ app.use(cors({
 
 // Use the authentication routes
 app.use("/api/v1/auth", authRoutes,  passwordRoutes, protectedRoute);
+app.use("/api/v1/user", userRoutes); // Add user routes
+
 
 
 
