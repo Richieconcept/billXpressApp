@@ -12,6 +12,11 @@ const verifyEmail = async (req, res) => {
       return res.status(400).json({ message: "Invalid verification token." });
     }
 
+    // Check if the user is already verified
+    if (user.isVerified) {
+      return res.status(200).json({ message: "Account is already verified." });
+    }
+
     // Check if the verification token has expired
     if (user.verificationTokenExpires < Date.now()) {
       return res.status(400).json({
