@@ -1,5 +1,4 @@
 // controllers/verifyEmailController.js
-const nodemailer = require("nodemailer");
 const User = require("../models/user");
 
 const verifyEmail = async (req, res) => {
@@ -13,15 +12,25 @@ const verifyEmail = async (req, res) => {
       return res.status(400).json({ message: "Invalid verification token." });
     }
 
-    // Mark the user as verified and clear the verification token
+    // Check if the verification token has expired
+    if (user.verificationTokenExpires < Date.now()) {
+      return res.status(400).json({
+        message: "Verification token has expired. Please request a new one.",
+      });
+    }
+
+    // Mark the user as verified and clear the verification token and expiry
     user.isVerified = true;
-    user.verificationToken = undefined; // Clear the token after successful verification
+    user.verificationToken = undefined; // Clear the token
+    user.verificationTokenExpires = undefined; // Clear the expiry date
     await user.save();
 
     res.status(200).json({ message: "Email verified successfully!" });
   } catch (error) {
     console.error("Error during email verification:", error);
-    res.status(500).json({ message: "An error occurred while verifying the email." });
+    res.status(500).json({
+      message: "An error occurred while verifying the email.",
+    });
   }
 };
 

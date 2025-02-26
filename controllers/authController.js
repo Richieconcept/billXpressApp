@@ -12,7 +12,7 @@ const registerUser = async (req, res) => {
     // Validate input
     // ... (input validation)
 
-   // Check for existing user
+    // Check for existing user
     if (await User.findOne({ email })) {
       return res.status(400).json({ message: "Email is already in use." });
     }
@@ -26,8 +26,9 @@ const registerUser = async (req, res) => {
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Generate verification token
+    // Generate verification token and set expiration (15 minutes)
     const verificationToken = generateVerificationToken();
+    const verificationTokenExpires = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
 
     // Create new user
     const newUser = new User({
@@ -37,6 +38,7 @@ const registerUser = async (req, res) => {
       phoneNumber,
       password: hashedPassword,
       verificationToken,
+      verificationTokenExpires, // 🆕 Add this field
     });
 
     // Save user to the database

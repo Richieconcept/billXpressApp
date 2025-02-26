@@ -32,25 +32,60 @@ const userSchema = new mongoose.Schema(
     avatar: {
       type: String,
       default:
-        "file:///C:/Users/Hi/Desktop/billExpressProject/billEpressApp/assets/prfileAvatar.png", // Replace with the URL of your default avatar
+        "file:///C:/Users/Hi/Desktop/billExpressProject/billEpressApp/assets/prfileAvatar.png",
     },
+
+    // 🆕 Email Verification
     verificationToken: {
-      type: String, // Stores the unique email verification token
+      type: String, 
+    },
+    verificationTokenExpires: {
+      type: Date, // 🆕 Expiration for the email verification token
     },
     isVerified: {
       type: Boolean,
-      default: false, // Indicates whether the user's email is verified
+      default: false,
     },
-    // Add these fields for password reset
+
+    // 🆕 Password Reset
     passwordResetToken: {
-      type: String, // Stores the reset token
+      type: String, 
     },
     passwordResetExpires: {
-      type: Date, // Stores the expiry date and time for the token
+      type: Date, 
+    },
+
+    // 🆕 Virtual Account Information from Monnify
+    virtualAccountNumber: {
+      type: String,
+      unique: true,
+      sparse: true,
+    },
+    virtualAccountName: {
+      type: String,
+    },
+    bankName: {
+      type: String,
+    },
+
+    // 🆕 Wallet Information
+    wallet: {
+      balance: {
+        type: Number,
+        default: 0,
+      },
+      transactions: [
+        {
+          amount: { type: Number, required: true },
+          type: { type: String, enum: ["credit", "debit"], required: true },
+          description: { type: String },
+          date: { type: Date, default: Date.now },
+        },
+      ],
     },
   },
   {
-    timestamps: true, // Adds createdAt and updatedAt fields
+    timestamps: true,
   }
 );
 
