@@ -1,6 +1,6 @@
 // routes/userRoutes.js
 const express = require("express");
-const { getProfile, updateProfile, deleteAccount } = require("../controllers/userController");
+const { getProfile, updateProfile, deleteAccount, getUserWithVirtualAccounts } = require("../controllers/userController");
 const authenticate = require("../middlewares/authenticate");
 
 const router = express.Router();

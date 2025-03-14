@@ -1,92 +1,41 @@
 const mongoose = require("mongoose");
 
+const VirtualAccountSchema = new mongoose.Schema({
+  accountNumber: { type: String, required: true },
+  accountName: { type: String, required: true },
+  bankName: { type: String, required: true },
+  reservedAccountId: { type: String, required: true }, // Useful for future API calls
+  createdAt: { type: Date, default: Date.now },
+});
+
 const userSchema = new mongoose.Schema(
   {
-    name: {
-      type: String,
-      required: true,
-      trim: true,
-    },
-    username: {
-      type: String,
-      required: true,
-      unique: true,
-      trim: true,
-    },
-    email: {
-      type: String,
-      required: true,
-      unique: true,
-      lowercase: true,
-    },
-    phoneNumber: {
-      type: String,
-      required: true,
-      unique: true,
-    },
-    password: {
-      type: String,
-      required: true,
-      minlength: 6,
-    },
-    avatar: {
-      type: String,
-      default:
-        "file:///C:/Users/Hi/Desktop/billExpressProject/billEpressApp/assets/prfileAvatar.png",
-    },
+    name: { type: String, required: true, trim: true },
+    username: { type: String, required: true, unique: true, trim: true },
+    email: { type: String, required: true, unique: true, lowercase: true },
+    phoneNumber: { type: String, required: true, unique: true },
+    password: { type: String, required: true, minlength: 6 },
+    avatar: { type: String, default: "default-avatar.png" },
 
-    // 🆕 Email Verification
-    verificationToken: {
-      type: String, 
-    },
-    verificationTokenExpires: {
-      type: Date, // 🆕 Expiration for the email verification token
-    },
-    isVerified: {
-      type: Boolean,
-      default: false,
-    },
+    // Email Verification
+    verificationToken: String,
+    verificationTokenExpires: Date,
+    isVerified: { type: Boolean, default: false },
 
-    // 🆕 Password Reset
-    passwordResetToken: {
-      type: String, 
-    },
-    passwordResetExpires: {
-      type: Date, 
-    },
+    // Password Reset
+    passwordResetToken: String,
+    passwordResetExpires: Date,
 
-    // 🆕 Virtual Account Information from Monnify
-    virtualAccountNumber: {
-      type: String,
-      unique: true,
-      sparse: true,
-    },
-    virtualAccountName: {
-      type: String,
-    },
-    bankName: {
-      type: String,
-    },
+    // Virtual Accounts (Multiple Payment Gateways)
+    virtualAccounts: [VirtualAccountSchema],
 
-    // 🆕 Wallet Information
+    // Wallet Information
     wallet: {
-      balance: {
-        type: Number,
-        default: 0,
-      },
-      transactions: [
-        {
-          amount: { type: Number, required: true },
-          type: { type: String, enum: ["credit", "debit"], required: true },
-          description: { type: String },
-          date: { type: Date, default: Date.now },
-        },
-      ],
+      balance: { type: Number, default: 0 },
+      transactions: [{ type: mongoose.Schema.Types.ObjectId, ref: "Transaction" }],
     },
   },
-  {
-    timestamps: true,
-  }
+  { timestamps: true }
 );
 
 module.exports = mongoose.model("User", userSchema);

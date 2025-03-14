@@ -65,4 +65,50 @@ const deleteAccount = async (req, res) => {
     }
 };
 
-module.exports = { getProfile, updateProfile, deleteAccount };
+
+// ✅ Fetch User with Populated Virtual Accounts
+const getUserWithVirtualAccounts = async (req, res) => {
+    try {
+        const { userId } = req.params;
+
+        // Fetch user along with populated virtual accounts, excluding password
+        const user = await User.findById(userId)
+            .select("-password")
+            .populate({
+                path: "virtualAccounts",
+                select: "accountNumber bankName accountName status", // Specify fields to return
+            });
+
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        // Build a customized response with virtual account details
+        const response = {
+            name: user.name,
+            username: user.username,
+            email: user.email,
+            phoneNumber: user.phoneNumber,
+            avatar: user.avatar,
+            isVerified: user.isVerified,
+            wallet: user.wallet,
+            virtualAccounts: user.virtualAccounts.map((account) => ({
+                accountNumber: account.accountNumber,
+                bankName: account.bankName,
+                accountName: account.accountName,
+                status: account.status,
+            })),
+            createdAt: user.createdAt,
+            updatedAt: user.updatedAt,
+        };
+
+        console.log("User with Virtual Accounts:", response);
+        res.status(200).json(response);
+
+    } catch (error) {
+        console.error("Error fetching user with virtual accounts:", error.message);
+        res.status(500).json({ message: "Server error" });
+    }
+};
+
+module.exports = { getProfile, updateProfile, deleteAccount, getUserWithVirtualAccounts };

@@ -20,6 +20,6 @@ router.post("/verify-email", verifyEmail);
 router.post("/login", loginUser);
 
 // Resend Verification Token Route
-router.post("/resend-token", resendVerificationToken);
+router.post("/resend-token", authenticate, resendVerificationToken);
 
 module.exports = router;
