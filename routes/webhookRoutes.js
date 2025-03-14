@@ -33,6 +33,12 @@ router.post("/webhook", async (req, res) => {
       return res.status(200).json({ status: "ignored" });
     }
 
+    // ✅ Ensure amount_received is valid
+    if (!amount_received) {
+      console.log("❌ amount_received is missing, aborting transaction.");
+      return res.status(400).json({ error: "amount_received is required" });
+    }
+
     // ✅ Prevent duplicate transactions
     const existingTransaction = await Transaction.findOne({ transactionId: transaction_id });
 
@@ -51,8 +57,8 @@ router.post("/webhook", async (req, res) => {
       return res.status(404).json({ error: "User not found" });
     }
 
-    // ✅ Ensure user gets only the received amount (after fee deduction)
-    const actualAmountReceived = parseFloat(amount_received) || parseFloat(amount_paid); 
+    // ✅ Ensure user gets only the actual credited amount
+    const actualAmountReceived = parseFloat(amount_received); 
     const feesDeducted = fee ? parseFloat(fee) : 0; 
 
     // ✅ Update wallet balance
