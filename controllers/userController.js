@@ -1,18 +1,45 @@
 // controllers/userController.js
 const User = require("../models/user");
 
-// Get user profile
 const getProfile = async (req, res) => {
     try {
-        const user = await User.findById(req.user.id).select("-password"); // Exclude password field
+        const user = await User.findById(req.user.id)
+            .select("-password")
+            .populate({
+                path: "virtualAccounts",
+                select: "accountNumber bankName accountName status", 
+            });
+
         if (!user) {
             return res.status(404).json({ message: "User not found" });
         }
-        res.status(200).json(user);
+
+        // Response structure including wallet & virtual accounts
+        res.status(200).json({
+            name: user.name,
+            username: user.username,
+            email: user.email,
+            phoneNumber: user.phoneNumber,
+            avatar: user.avatar,
+            isVerified: user.isVerified,
+            walletBalance: user.wallet?.balance || 0,  // ✅ Include wallet balance
+            transactions: user.wallet?.transactions || [], // ✅ Include transactions
+            virtualAccounts: user.virtualAccounts.map((account) => ({
+                accountNumber: account.accountNumber,
+                bankName: account.bankName,
+                accountName: account.accountName,
+                status: account.status,
+            })),
+            createdAt: user.createdAt,
+            updatedAt: user.updatedAt,
+        });
+
     } catch (error) {
+        console.error("❌ Error fetching user profile:", error.message);
         res.status(500).json({ message: "Server error" });
     }
 };
+
 
 // Update user profile
 const updateProfile = async (req, res) => {
@@ -65,25 +92,29 @@ const deleteAccount = async (req, res) => {
     }
 };
 
-
-// ✅ Fetch User with Populated Virtual Accounts
+// ✅ Fetch User with Virtual Accounts & Transactions
 const getUserWithVirtualAccounts = async (req, res) => {
     try {
         const { userId } = req.params;
 
-        // Fetch user along with populated virtual accounts, excluding password
+        // Fetch user along with populated virtual accounts & transactions
         const user = await User.findById(userId)
             .select("-password")
             .populate({
                 path: "virtualAccounts",
-                select: "accountNumber bankName accountName status", // Specify fields to return
+                select: "accountNumber bankName accountName status", // ✅ Populate Virtual Accounts
+            })
+            .populate({
+                path: "wallet.transactions",
+                select: "amount type description status date", // ✅ Populate Transaction History
+                options: { sort: { date: -1 } }, // Sort transactions (latest first)
             });
 
         if (!user) {
             return res.status(404).json({ message: "User not found" });
         }
 
-        // Build a customized response with virtual account details
+        // Build a structured response with wallet & transactions
         const response = {
             name: user.name,
             username: user.username,
@@ -91,7 +122,16 @@ const getUserWithVirtualAccounts = async (req, res) => {
             phoneNumber: user.phoneNumber,
             avatar: user.avatar,
             isVerified: user.isVerified,
-            wallet: user.wallet,
+            wallet: {
+                balance: user.wallet?.balance || 0,  // ✅ Wallet Balance
+                transactions: user.wallet?.transactions.map((tx) => ({
+                    amount: tx.amount,
+                    type: tx.type,
+                    description: tx.description,
+                    status: tx.status,
+                    date: tx.date,
+                })) || [], // ✅ Transaction History
+            },
             virtualAccounts: user.virtualAccounts.map((account) => ({
                 accountNumber: account.accountNumber,
                 bankName: account.bankName,
@@ -102,13 +142,12 @@ const getUserWithVirtualAccounts = async (req, res) => {
             updatedAt: user.updatedAt,
         };
 
-        console.log("User with Virtual Accounts:", response);
+        console.log("User with Virtual Accounts & Transactions:", response);
         res.status(200).json(response);
 
     } catch (error) {
-        console.error("Error fetching user with virtual accounts:", error.message);
+        console.error("❌ Error fetching user with virtual accounts and transactions:", error.message);
         res.status(500).json({ message: "Server error" });
     }
 };
-
 module.exports = { getProfile, updateProfile, deleteAccount, getUserWithVirtualAccounts };

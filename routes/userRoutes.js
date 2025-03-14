@@ -1,17 +1,17 @@
-// routes/userRoutes.js
 const express = require("express");
 const { getProfile, updateProfile, deleteAccount, getUserWithVirtualAccounts } = require("../controllers/userController");
 const authenticate = require("../middlewares/authenticate");
 
 const router = express.Router();
 
-// Get user profile (Protected)
-router.get("/profile", authenticate, getProfile);
+router.get("/profile", authenticate, getProfile);  // ✅ Now returns wallet & virtual accounts
 
-// Update user profile (Protected)
 router.put("/profile", authenticate, updateProfile);
-
-// Delete user account (Protected)
 router.delete("/profile", authenticate, deleteAccount);
 
+// ✅ Fetch user profile with virtual accounts & transactions
+router.get("/profile/:userId", authenticate, getUserWithVirtualAccounts);
+
+
 module.exports = router;
+y
