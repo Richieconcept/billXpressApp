@@ -9,6 +9,8 @@ const passwordRoutes = require("./routes/passwordRoutes");
 const protectedRoute = require("./routes/protectedRoute");
 const userRoutes = require("./routes/userRoutes"); // Import user routes
 const webhookRoutes = require("./routes/webhookRoutes"); // ✅ Import webhook route
+const transactionRoutes = require("./routes/transactionRoutes");
+
 
 
 
@@ -33,6 +35,8 @@ app.use(cors({
 app.use("/api/v1/auth", authRoutes,  passwordRoutes, protectedRoute);
 app.use("/api/v1/user", userRoutes); // Add user routes
 app.use("/api/v1/payment", webhookRoutes); // ✅ Add webhook route
+app.use("/api/v1/transactions", transactionRoutes); // Use transaction routes
+
 
 
 
