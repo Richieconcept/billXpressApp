@@ -9,6 +9,8 @@ const PAYMENTPOINT_SECRET = process.env.PAYMENTPOINT_API_SECRET;
 // Webhook endpoint
 router.post("/webhook", async (req, res) => {
   try {
+    console.log("🔍 Incoming Webhook Data:", req.body); // Log the webhook payload for debugging
+
     // Get raw JSON body
     const webhookData = JSON.stringify(req.body);
     const receivedSignature = req.headers["paymentpoint-signature"];
@@ -33,20 +35,6 @@ router.post("/webhook", async (req, res) => {
       return res.status(200).json({ status: "ignored" });
     }
 
-    // ✅ Ensure amount_received is valid
-    if (!amount_received) {
-      console.log("❌ amount_received is missing, aborting transaction.");
-      return res.status(400).json({ error: "amount_received is required" });
-    }
-
-    // ✅ Prevent duplicate transactions
-    const existingTransaction = await Transaction.findOne({ transactionId: transaction_id });
-
-    if (existingTransaction) {
-      console.log(`⚠️ Duplicate transaction detected: ${transaction_id}`);
-      return res.status(200).json({ status: "duplicate_transaction_ignored" });
-    }
-
     // ✅ Find user by their virtual account number
     const user = await User.findOne({
       "virtualAccounts.accountNumber": receiver.account_number,
@@ -57,9 +45,27 @@ router.post("/webhook", async (req, res) => {
       return res.status(404).json({ error: "User not found" });
     }
 
-    // ✅ Ensure user gets only the actual credited amount
-    const actualAmountReceived = parseFloat(amount_received); 
-    const feesDeducted = fee ? parseFloat(fee) : 0; 
+    // ✅ Prevent duplicate transactions
+    const existingTransaction = await Transaction.findOne({ transactionId: transaction_id });
+
+    if (existingTransaction) {
+      console.log(`⚠️ Duplicate transaction detected: ${transaction_id}`);
+      return res.status(200).json({ status: "duplicate_transaction_ignored" });
+    }
+
+    // ✅ Handle missing `amount_received`
+    let actualAmountReceived = parseFloat(amount_received);
+
+    if (!actualAmountReceived) {
+      console.log("⚠️ amount_received is missing, calculating manually...");
+      const transactionFee = fee ? parseFloat(fee) : 0;
+      actualAmountReceived = parseFloat(amount_paid) - transactionFee;
+
+      if (actualAmountReceived < 0) {
+        console.log("❌ Invalid calculated amount, aborting transaction.");
+        return res.status(400).json({ error: "Invalid transaction amount" });
+      }
+    }
 
     // ✅ Update wallet balance
     user.wallet.balance += actualAmountReceived;
@@ -70,7 +76,7 @@ router.post("/webhook", async (req, res) => {
       amount: actualAmountReceived, // Store the actual credited amount
       type: "credit",
       description: "Wallet funding via virtual account",
-      feesDeducted, // Store transaction fee for future reference
+      feesDeducted: fee ? parseFloat(fee) : 0, // Store transaction fee for reference
       date: new Date(),
       user: user._id, // Link transaction to user
     });
