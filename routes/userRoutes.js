@@ -14,4 +14,3 @@ router.get("/profile/:userId", authenticate, getUserWithVirtualAccounts);
 
 
 module.exports = router;
-y
