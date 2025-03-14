@@ -9,7 +9,7 @@ const PAYMENTPOINT_SECRET = process.env.PAYMENTPOINT_API_SECRET;
 // Webhook endpoint
 router.post("/webhook", async (req, res) => {
   try {
-    console.log("🔍 Incoming Webhook Data:", req.body); // Log the webhook payload for debugging
+    console.log("🔍 Incoming Webhook Data:", req.body); // Log webhook data
 
     // Get raw JSON body
     const webhookData = JSON.stringify(req.body);
@@ -28,7 +28,7 @@ router.post("/webhook", async (req, res) => {
     }
 
     // ✅ Signature is valid, process the webhook
-    const { transaction_id, amount_paid, amount_received, transaction_status, receiver, fee } = req.body;
+    const { transaction_id, amount_paid, settlement_amount, transaction_status, receiver, settlement_fee } = req.body;
 
     if (transaction_status !== "success") {
       console.log("❌ Payment failed, ignoring.");
@@ -53,12 +53,12 @@ router.post("/webhook", async (req, res) => {
       return res.status(200).json({ status: "duplicate_transaction_ignored" });
     }
 
-    // ✅ Handle missing `amount_received`
-    let actualAmountReceived = parseFloat(amount_received);
+    // ✅ Use `settlement_amount` instead of `amount_received`
+    let actualAmountReceived = parseFloat(settlement_amount);
 
     if (!actualAmountReceived) {
-      console.log("⚠️ amount_received is missing, calculating manually...");
-      const transactionFee = fee ? parseFloat(fee) : 0;
+      console.log("⚠️ settlement_amount is missing, calculating manually...");
+      const transactionFee = settlement_fee ? parseFloat(settlement_fee) : 0;
       actualAmountReceived = parseFloat(amount_paid) - transactionFee;
 
       if (actualAmountReceived < 0) {
@@ -76,7 +76,7 @@ router.post("/webhook", async (req, res) => {
       amount: actualAmountReceived, // Store the actual credited amount
       type: "credit",
       description: "Wallet funding via virtual account",
-      feesDeducted: fee ? parseFloat(fee) : 0, // Store transaction fee for reference
+      feesDeducted: settlement_fee ? parseFloat(settlement_fee) : 0, // Store transaction fee for reference
       date: new Date(),
       user: user._id, // Link transaction to user
     });
