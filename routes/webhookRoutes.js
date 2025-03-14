@@ -26,14 +26,14 @@ router.post("/webhook", async (req, res) => {
     }
 
     // ✅ Signature is valid, process the webhook
-    const { transaction_id, amount_paid, transaction_status, receiver } = req.body;
+    const { transaction_id, amount_paid, amount_received, transaction_status, receiver, fee } = req.body;
 
     if (transaction_status !== "success") {
       console.log("❌ Payment failed, ignoring.");
       return res.status(200).json({ status: "ignored" });
     }
 
-    // ✅ Check if transaction already exists to prevent duplicates
+    // ✅ Prevent duplicate transactions
     const existingTransaction = await Transaction.findOne({ transactionId: transaction_id });
 
     if (existingTransaction) {
@@ -51,17 +51,22 @@ router.post("/webhook", async (req, res) => {
       return res.status(404).json({ error: "User not found" });
     }
 
+    // ✅ Ensure user gets only the received amount (after fee deduction)
+    const actualAmountReceived = parseFloat(amount_received) || parseFloat(amount_paid); 
+    const feesDeducted = fee ? parseFloat(fee) : 0; 
+
     // ✅ Update wallet balance
-    user.wallet.balance += amount_paid;
+    user.wallet.balance += actualAmountReceived;
 
     // ✅ Create & save transaction in the Transaction model
     const newTransaction = new Transaction({
       transactionId: transaction_id,
-      amount: amount_paid,
+      amount: actualAmountReceived, // Store the actual credited amount
       type: "credit",
       description: "Wallet funding via virtual account",
+      feesDeducted, // Store transaction fee for future reference
       date: new Date(),
-      user: user._id, // Link to User
+      user: user._id, // Link transaction to user
     });
 
     await newTransaction.save();
@@ -71,12 +76,13 @@ router.post("/webhook", async (req, res) => {
 
     await user.save();
 
-    console.log(`✅ Wallet funded: ₦${amount_paid} for ${user.email}`);
+    console.log(`✅ Wallet funded: ₦${actualAmountReceived} for ${user.email}`);
 
     res.status(200).json({
       status: "success",
-      message: `Wallet credited with ₦${amount_paid}`,
+      message: `Wallet credited with ₦${actualAmountReceived}`,
       newBalance: user.wallet.balance,
+      transaction: newTransaction, // Return transaction details for tracking
     });
   } catch (error) {
     console.error("❌ Webhook processing error:", error);
