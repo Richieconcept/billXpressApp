@@ -1,20 +1,26 @@
 // controllers/userController.js
 const User = require("../models/user");
 
+
 const getProfile = async (req, res) => {
     try {
         const user = await User.findById(req.user.id)
             .select("-password")
             .populate({
                 path: "virtualAccounts",
-                select: "accountNumber bankName accountName status", 
+                select: "accountNumber bankName accountName status", // ✅ Populate Virtual Accounts
+            })
+            .populate({
+                path: "wallet.transactions",
+                select: "amount type description status date", // ✅ Populate Transaction History
+                options: { sort: { date: -1 } }, // Sort transactions (latest first)
             });
 
         if (!user) {
             return res.status(404).json({ message: "User not found" });
         }
 
-        // Response structure including wallet & virtual accounts
+        // Build a structured response including wallet, transactions, and virtual accounts
         res.status(200).json({
             name: user.name,
             username: user.username,
@@ -22,8 +28,16 @@ const getProfile = async (req, res) => {
             phoneNumber: user.phoneNumber,
             avatar: user.avatar,
             isVerified: user.isVerified,
-            walletBalance: user.wallet?.balance || 0,  // ✅ Include wallet balance
-            transactions: user.wallet?.transactions || [], // ✅ Include transactions
+            wallet: {
+                balance: user.wallet?.balance || 0,  // ✅ Wallet Balance
+                transactions: user.wallet?.transactions.map((tx) => ({
+                    amount: tx.amount,
+                    type: tx.type,
+                    description: tx.description,
+                    status: tx.status,
+                    date: tx.date,
+                })) || [], // ✅ Transaction History
+            },
             virtualAccounts: user.virtualAccounts.map((account) => ({
                 accountNumber: account.accountNumber,
                 bankName: account.bankName,
@@ -39,7 +53,6 @@ const getProfile = async (req, res) => {
         res.status(500).json({ message: "Server error" });
     }
 };
-
 
 // Update user profile
 const updateProfile = async (req, res) => {
@@ -70,7 +83,7 @@ const updateProfile = async (req, res) => {
 
         // Success response with a custom message
         res.status(200).json({
-            message: `${user.username} profile updated successfully`,
+            message: `${user.username}" profile updated successfully"`,
             user
         });
 
